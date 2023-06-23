@@ -1,95 +1,81 @@
-const express = require('express');
-const { Sequelize, Model, DataTypes, Op } = require('sequelize');
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 
-// Connect to your PostgreSQL database
-const sequelize = new Sequelize('your_database', 'your_username', 'your_password', {
-    host: 'localhost',
-    dialect: 'postgres',
-});
+const App = () => {
+    const [users, setUsers] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [searchQuery, setSearchQuery] = useState('');
 
-// Define a model for your table
-class User extends Model {}
-User.init(
-    {
-        id: {
-            type: DataTypes.INTEGER,
-            autoIncrement: true,
-            primaryKey: true,
-        },
-        name: {
-            type: DataTypes.STRING,
-            allowNull: false,
-        },
-        email: {
-            type: DataTypes.STRING,
-            allowNull: false,
-        },
-    },
-    {
-        sequelize,
-        modelName: 'user',
-    }
-);
-
-// Create the Express.js server
-const app = express();
-const PORT = 3000;
-
-// Parse JSON request body
-app.use(express.json());
-
-// API endpoint for paginated data with search
-app.get('/users', async (req, res) => {
-    const { page = 1, limit = 10, search } = req.query;
-    const offset = (page - 1) * limit;
-
-    try {
-        let whereCondition = {}; // Object to hold the search conditions
-
-        if (search) {
-            // Add search conditions to the where object
-            whereCondition = {
-                [Op.or]: [
-                    {
-                        name: {
-                            [Op.iLike]: `%${search}%`, // Case-insensitive search for name
-                        },
-                    },
-                    {
-                        email: {
-                            [Op.iLike]: `%${search}%`, // Case-insensitive search for email
-                        },
-                    },
-                ],
-            };
+    const fetchUsers = async (page = 1, limit = 10) => {
+        try {
+            const response = await axios.get(
+                `/users?page=${page}&limit=${limit}&search=${encodeURIComponent(searchQuery)}`
+            );
+            setUsers(response.data);
+            setTotalPages(response.headers['x-total-pages']);
+            setLoading(false);
+        } catch (error) {
+            console.error('Error fetching users:', error);
+            setError('Error fetching users');
+            setLoading(false);
         }
+    };
 
-        // Fetch paginated data from the "users" table with search conditions
-        const users = await User.findAndCountAll({
-            where: whereCondition,
-            offset,
-            limit: parseInt(limit),
-        });
+    useEffect(() => {
+        fetchUsers();
+    }, []);
 
-        const totalPages = Math.ceil(users.count / limit);
+    const handlePageChange = (page) => {
+        setCurrentPage(page);
+        fetchUsers(page);
+    };
 
-        res.set('X-Total-Pages', totalPages); // Set the X-Total-Pages header
+    const handleSearch = (event) => {
+        event.preventDefault();
+        fetchUsers(1);
+    };
 
-        res.json(users.rows);
-    } catch (error) {
-        console.error('Error fetching users:', error);
-        res.status(500).json({ error: 'Internal server error' });
+    if (loading) {
+        return <div>Loading...</div>;
     }
-});
 
-// Start the server
-sequelize
-    .sync() // Sync the defined models with the database
-    .then(() => {
-        app.listen(PORT, () => {
-            console.log(`Server is running on http://localhost:${PORT}`);
-        });
-    })
-    .catch((error) => {
-        console.error('Error connecting to the database:', error);
-    });
+    if (error) {
+        return <div>{error}</div>;
+    }
+
+    return (
+        <div>
+            <h1>User List</h1>
+            <form onSubmit={handleSearch}>
+                <input
+                    type="text"
+                    placeholder="Search by name or email"
+                    value={searchQuery}
+                    onChange={(event) => setSearchQuery(event.target.value)}
+                />
+                <button type="submit">Search</button>
+            </form>
+            <ul>
+                {users.map((user) => (
+                    <li key={user.id}>
+                        Name: {user.name} | Email: {user.email}
+                    </li>
+                ))}
+            </ul>
+            <div>
+                {currentPage > 1 && (
+                    <button onClick={() => handlePageChange(currentPage - 1)}>Previous</button>
+                )}
+                Page {currentPage} of {totalPages}
+                {currentPage < totalPages && (
+                    <button onClick={() => handlePageChange(currentPage + 1)}>Next</button>
+                )}
+            </div>
+        </div>
+    );
+};
+
+export default App;
