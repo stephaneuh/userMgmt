@@ -29,19 +29,15 @@ const UserList = () => {
     return (
         <div>
             <h1>User List</h1>
-            <div>
-                <input
-                    type="text"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                <button onClick={handleSearch}>Search</button>
-            </div>
-            <ul>
-                {users.map((user) => (
-                    <li key={user.id}>{user.name}</li>
-                ))}
-            </ul>
+            {users.length === 0 ? (
+                <p>No results returned.</p>
+            ) : (
+                <ul>
+                    {users.map((user) => (
+                        <li key={user.id}>{user.name}</li>
+                    ))}
+                </ul>
+            )}
         </div>
     );
 };
