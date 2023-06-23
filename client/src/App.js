@@ -7,7 +7,8 @@ function App() {
 
     const handleSearch = async (searchTerm) => {
         try {
-            const response = await fetch(`/users?search=${searchTerm}`);
+            const apiUrl = 'http://YOUR_IP_ADDRESS:YOUR_PORT/users'; // Replace with your IP address and port
+            const response = await fetch(`${apiUrl}?search=${searchTerm}`);
             const data = await response.json();
             setUsers(data);
         } catch (error) {
