@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import UserList from './UserList';
 import UserForm from './UserForm';
 
@@ -29,6 +29,12 @@ const App = () => {
             setLoading(false);
         }
     };
+
+    useEffect(() => {
+        // Perform a default search when the component mounts
+        const defaultSearchTerm = 'default';
+        handleSearch(defaultSearchTerm);
+    }, []); // Empty dependency array to trigger the effect only once
 
     return (
         <div>
