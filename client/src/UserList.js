@@ -4,27 +4,35 @@ const UserList = () => {
     const [users, setUsers] = useState([]);
 
     useEffect(() => {
-        fetch('/users')
-            .then(response => response.json())
-            .then(data => setUsers(data))
-            .catch(error => console.error('Error fetching users:', error));
+        const fetchUsers = async () => {
+            try {
+                const apiUrl = 'http://YOUR_IP_ADDRESS:YOUR_PORT/users';
+                const response = await fetch(apiUrl, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+                if (!response.ok) {
+                    throw new Error('Error fetching users');
+                }
+                const data = await response.json();
+                setUsers(data);
+            } catch (error) {
+                console.error('Error fetching users:', error);
+            }
+        };
+
+        fetchUsers();
     }, []);
 
     return (
         <div>
-            <h2>User List</h2>
-            {users.length > 0 ? (
-                <ul>
-                    {users.map(user => (
-                        <li key={user.id}>
-                            <strong>Name:</strong> {user.name} <br />
-                            <strong>Email:</strong> {user.email}
-                        </li>
-                    ))}
-                </ul>
-            ) : (
-                <p>No users found.</p>
-            )}
+            <h1>User List</h1>
+            <ul>
+                {users.map((user) => (
+                    <li key={user.id}>{user.name}</li>
+                ))}
+            </ul>
         </div>
     );
 };
