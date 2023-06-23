@@ -1,30 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 
-const UserList = () => {
-    const [users, setUsers] = useState([]);
-    const [searchTerm, setSearchTerm] = useState('');
-
-    const handleSearch = async () => {
-        try {
-            const apiUrl = 'http://YOUR_IP_ADDRESS:YOUR_PORT/users';
-            const response = await fetch(`${apiUrl}?search=${searchTerm}`, {
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            });
-            if (!response.ok) {
-                throw new Error('Error fetching users');
-            }
-            const data = await response.json();
-            setUsers(data);
-        } catch (error) {
-            console.error('Error fetching users:', error);
-        }
-    };
-
-    useEffect(() => {
-        handleSearch();
-    }, []);
+const UserList = ({ users, loading }) => {
+    if (loading) {
+        return <p>Loading...</p>;
+    }
 
     return (
         <div>

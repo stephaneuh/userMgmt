@@ -1,28 +1,41 @@
 import React, { useState } from 'react';
-import UserList from './components/UserList';
-import UserForm from './components/UserForm';
+import UserList from './UserList';
+import UserForm from './UserForm';
 
-function App() {
+const App = () => {
     const [users, setUsers] = useState([]);
+    const [loading, setLoading] = useState(false);
 
     const handleSearch = async (searchTerm) => {
         try {
-            const apiUrl = 'http://YOUR_IP_ADDRESS:YOUR_PORT/users'; // Replace with your IP address and port
-            const response = await fetch(`${apiUrl}?search=${searchTerm}`);
+            setLoading(true);
+
+            const apiUrl = `http://YOUR_IP_ADDRESS:YOUR_PORT/users?search=${searchTerm}`;
+            const response = await fetch(apiUrl, {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error('Error fetching users');
+            }
+
             const data = await response.json();
             setUsers(data);
         } catch (error) {
-            console.error('Error:', error);
+            console.error('Error fetching users:', error);
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
-        <div className="container">
-            <h1>User Management</h1>
+        <div>
             <UserForm handleSearch={handleSearch} />
-            <UserList users={users} />
+            <UserList users={users} loading={loading} />
         </div>
     );
-}
+};
 
 export default App;
